@@ -1,0 +1,37 @@
+{
+  "name": "scout-tester",
+  "version": "2.1.0",
+  "type": "module",
+  "description": "Automated block-check testing of Scout API against high-demand websites",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./core/constants": "./core/constants.js",
+    "./core/probe": "./core/probe.js",
+    "./core/results": "./core/results.js",
+    "./core/runs": "./core/runs.js",
+    "./core/countries": "./core/countries.js",
+    "./core/runner": "./core/runner.js"
+  },
+  "files": [
+    "index.js",
+    "server.js",
+    "index.html",
+    "core/",
+    "docs/",
+    "SCOUT_API_README.md"
+  ],
+  "bin": {
+    "scout-tester": "./server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/smoke.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
