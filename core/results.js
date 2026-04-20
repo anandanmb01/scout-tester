@@ -6,9 +6,10 @@ import { join } from 'path';
 
 // ─── Scout Key State ───
 
-let SCOUT_KEY = process.env.SCOUT_KEY || '';
+let SCOUT_KEY = '';
 
 export function getScoutKey() {
+  if (!SCOUT_KEY) SCOUT_KEY = process.env.SCOUT_KEY || '';
   return SCOUT_KEY;
 }
 
@@ -71,8 +72,20 @@ export function loadResults() {
   }
 }
 
+let saveTimer = null;
 export function saveResults() {
-  writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2));
+  // Debounce — write at most every 2 seconds to avoid blocking event loop
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    try { writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2)); } catch {}
+  }, 2000);
+}
+
+// Force save (for shutdown/finalize)
+export function saveResultsNow() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  try { writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2)); } catch {}
 }
 
 export function loadSites() {

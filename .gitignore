@@ -2,3 +2,12 @@ node_modules/
 .env
 data/
 *.log
+
+# Internal / not for public repo
+suggestions/
+failure-report.txt
+ARCHITECTURE (2).md
+DOCUMENTATION.md
+DOCUMENTATION_INDEX.md
+INTEGRATION_GUIDE.md
+QUICK_REFERENCE.md

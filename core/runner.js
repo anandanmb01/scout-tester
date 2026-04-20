@@ -1,9 +1,13 @@
 // ─── Test Runner & Batch Pipeline ───
 
-import { BATCH_SIZE, BATCH_GAP, SCOUT_USER_URL } from './constants.js';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { BATCH_SIZE, BATCH_GAP, SCOUT_USER_URL, COUNTRIES_ALL, DATA_DIR } from './constants.js';
+import { join } from 'path';
 import { rawProbe } from './probe.js';
 import { getActiveCountries } from './countries.js';
 import { getResults, loadSites, saveTestResult, getScoutKey } from './results.js';
+
+const SETTINGS_FILE = join(DATA_DIR, 'settings.json');
 import {
   loadRunsIndex, saveRunsIndex, getNextRunNumber,
   saveRunData, loadPausedRun, clearPausedRun, savePausedRun,
@@ -23,6 +27,47 @@ let sitesTotal = 0;
 let activeRun = null;
 let broadcast = () => {};
 
+// ─── Settings ───
+
+let autoRetestEnabled = false;
+let autoRetestMax = 3;
+let fireAllMode = false;
+let batchSize = BATCH_SIZE;
+let batchGap = BATCH_GAP;
+let retryAllCountries = false;
+let expandCountriesAfter = 2;
+
+// Load saved settings from disk
+try {
+  if (existsSync(SETTINGS_FILE)) {
+    const saved = JSON.parse(readFileSync(SETTINGS_FILE, 'utf8'));
+    if (saved.autoRetestEnabled !== undefined) autoRetestEnabled = saved.autoRetestEnabled;
+    if (saved.autoRetestMax !== undefined) autoRetestMax = saved.autoRetestMax;
+    if (saved.fireAllMode !== undefined) fireAllMode = saved.fireAllMode;
+    if (saved.batchSize !== undefined) batchSize = saved.batchSize;
+    if (saved.batchGap !== undefined) batchGap = saved.batchGap;
+    if (saved.retryAllCountries !== undefined) retryAllCountries = saved.retryAllCountries;
+    if (saved.expandCountriesAfter !== undefined) expandCountriesAfter = saved.expandCountriesAfter;
+  }
+} catch {}
+
+export function getSettings() {
+  return { autoRetestEnabled, autoRetestMax, fireAllMode, batchSize, batchGap, retryAllCountries, expandCountriesAfter };
+}
+
+export function updateSettings(opts) {
+  if (opts.autoRetest !== undefined) autoRetestEnabled = !!opts.autoRetest;
+  if (opts.autoRetestMax !== undefined) autoRetestMax = Math.min(100, Math.max(1, parseInt(opts.autoRetestMax) || 3));
+  if (opts.fireAll !== undefined) fireAllMode = !!opts.fireAll;
+  if (opts.batchSize !== undefined) batchSize = Math.min(100, Math.max(1, parseInt(opts.batchSize) || 5));
+  if (opts.batchGap !== undefined) batchGap = Math.max(0, parseInt(opts.batchGap ?? 500));
+  if (opts.retryAllCountries !== undefined) retryAllCountries = !!opts.retryAllCountries;
+  if (opts.expandCountriesAfter !== undefined) expandCountriesAfter = Math.max(1, parseInt(opts.expandCountriesAfter) || 2);
+  // Persist to disk
+  try { writeFileSync(SETTINGS_FILE, JSON.stringify(getSettings(), null, 2)); } catch {}
+  return getSettings();
+}
+
 // ─── State Accessors ───
 
 export function getState() {
@@ -39,65 +84,56 @@ export function setBroadcast(fn) {
 
 // ─── Active Run Tracking ───
 
+// Cache run index in memory to avoid repeated disk reads
+let cachedIndex = null;
+
+function getCachedIndex() {
+  if (!cachedIndex) cachedIndex = loadRunsIndex();
+  return cachedIndex;
+}
+
 function startRun(type) {
-  const runNumber = getNextRunNumber();
+  const index = getCachedIndex();
+  const runNumber = index.runs.length > 0 ? Math.max(...index.runs.map((r) => r.number)) + 1 : 1;
+
   activeRun = {
-    number: runNumber,
-    type,
+    number: runNumber, type,
     label: `Test #${runNumber}`,
     startedAt: new Date().toISOString(),
-    endedAt: null,
-    durationMs: 0,
-    creditsStart: null,
-    creditsEnd: null,
-    creditsSpent: null,
-    totalProbes: 0,
-    passProbes: 0,
-    failProbes: 0,
-    realBlocks: 0,
-    totalBandwidth: 0,
-    sitesTotal: 0,
-    sitesProcessed: 0,
-    siteResults: {},
+    endedAt: null, durationMs: 0,
+    creditsStart: null, creditsEnd: null, creditsSpent: null,
+    totalProbes: 0, passProbes: 0, failProbes: 0, realBlocks: 0,
+    totalBandwidth: 0, sitesTotal: 0, sitesProcessed: 0, siteResults: {},
   };
 
-  // Register in index as active
-  const index = loadRunsIndex();
+  // Save index in background
   index.activeRun = runNumber;
-  saveRunsIndex(index);
+  setTimeout(() => { try { saveRunsIndex(index); } catch {} }, 0);
 
   broadcast('run-start', { id: runNumber, type, startedAt: activeRun.startedAt });
   return activeRun;
 }
 
 function continueRun(type) {
-  // Reuse the last run number instead of creating a new one
-  const index = loadRunsIndex();
+  const index = getCachedIndex();
   const lastRun = index.runs.length > 0 ? index.runs[index.runs.length - 1] : null;
-  const runNumber = lastRun ? lastRun.number : getNextRunNumber();
+  const runNumber = lastRun ? lastRun.number : 1;
+
+  // Carry forward creditsStart from previous run so total spend accumulates
+  const prevCreditsStart = lastRun?.creditsStart ?? null;
 
   activeRun = {
-    number: runNumber,
-    type,
+    number: runNumber, type,
     label: `Test #${runNumber}`,
     startedAt: new Date().toISOString(),
-    endedAt: null,
-    durationMs: 0,
-    creditsStart: null,
-    creditsEnd: null,
-    creditsSpent: null,
-    totalProbes: 0,
-    passProbes: 0,
-    failProbes: 0,
-    realBlocks: 0,
-    totalBandwidth: 0,
-    sitesTotal: 0,
-    sitesProcessed: 0,
-    siteResults: {},
+    endedAt: null, durationMs: 0,
+    creditsStart: prevCreditsStart, creditsEnd: null, creditsSpent: lastRun?.creditsSpent ?? null,
+    totalProbes: 0, passProbes: 0, failProbes: 0, realBlocks: 0,
+    totalBandwidth: 0, sitesTotal: 0, sitesProcessed: 0, siteResults: {},
   };
 
   index.activeRun = runNumber;
-  saveRunsIndex(index);
+  setTimeout(() => { try { saveRunsIndex(index); } catch {} }, 0);
 
   broadcast('run-start', { id: runNumber, type, startedAt: activeRun.startedAt });
   return activeRun;
@@ -115,7 +151,7 @@ function recordProbe(url, nr) {
 function recordSiteResult(url, verdict) {
   if (!activeRun) return;
   activeRun.siteResults[url] = verdict;
-  activeRun.sitesProcessed++;
+  activeRun.sitesProcessed = Object.keys(activeRun.siteResults).length;
 }
 
 async function finalizeRun() {
@@ -125,18 +161,25 @@ async function finalizeRun() {
   activeRun.durationMs = (activeRun.elapsedBeforePause || 0) + thisSegment;
   clearPausedRun();
 
-  // Capture ending credits
+  // Capture ending credits — final calculation (retry once on failure)
   const SCOUT_KEY = getScoutKey();
-  try {
-    const r = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
-    const data = await r.json();
-    activeRun.creditsEnd = data.credit_coin ?? null;
-    if (activeRun.creditsStart !== null && activeRun.creditsEnd !== null) {
-      activeRun.creditsSpent = +(activeRun.creditsStart - activeRun.creditsEnd).toFixed(2);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const r = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
+      const data = await r.json();
+      activeRun.creditsEnd = data.credit_coin ?? null;
+      if (activeRun.creditsEnd !== null) {
+        if (activeRun.creditsStart === null) activeRun.creditsStart = activeRun.creditsEnd;
+        activeRun.creditsSpent = +(activeRun.creditsStart - activeRun.creditsEnd).toFixed(2);
+      }
+      break;
+    } catch (err) {
+      console.warn(`Failed to fetch end credits (attempt ${attempt + 1}): ${err.message}`);
+      if (attempt === 0) await sleep(2000);
     }
-  } catch (err) {
-    console.warn(`Failed to fetch end credits: ${err.message}`);
   }
+  // Preserve batch-polled creditsSpent if end fetch failed; only default to 0 if nothing was tracked
+  if (activeRun.creditsSpent === null) activeRun.creditsSpent = 0;
 
   const pass = Object.values(activeRun.siteResults).filter((v) => v === 'PASS').length;
   const fail = Object.values(activeRun.siteResults).filter((v) => v === 'FAIL').length;
@@ -176,6 +219,7 @@ async function finalizeRun() {
   }
   index.activeRun = null;
   saveRunsIndex(index);
+  cachedIndex = index;
 
   broadcast('run-end', { ...meta, siteResults: activeRun.siteResults });
   const finishedRun = activeRun;
@@ -185,9 +229,9 @@ async function finalizeRun() {
 
 // ─── Full Site Test (all countries in parallel) ───
 
-async function testSite(site) {
+async function testSite(site, useAllCountries = false) {
   const SCOUT_KEY = getScoutKey();
-  const countries = getActiveCountries();
+  const countries = useAllCountries ? COUNTRIES_ALL : getActiveCountries();
   const probeResults = await Promise.all(
     countries.map((country) => rawProbe(site.url, country, SCOUT_KEY)),
   );
@@ -214,39 +258,91 @@ async function testSite(site) {
 
 // ─── Batch Runner (parallel) ───
 
-async function runBatch(siteList, label, startOffset = 0) {
+async function runBatch(siteList, label, startOffset = 0, useAllCountries = false) {
   const SCOUT_KEY = getScoutKey();
+  const bs = batchSize;
+  console.log(`  [runner] batch=${bs} gap=${batchGap}ms allCountries=${useAllCountries} sites=${siteList.length}`);
   let completed = 0;
-  for (let i = 0; i < siteList.length; i += BATCH_SIZE) {
+  for (let i = 0; i < siteList.length; i += bs) {
     if (!testing) break;
-    const batch = siteList.slice(i, i + BATCH_SIZE);
-    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-    const totalBatches = Math.ceil(siteList.length / BATCH_SIZE);
+    const batch = siteList.slice(i, i + bs);
+    const batchNum = Math.floor(i / bs) + 1;
+    const totalBatches = Math.ceil(siteList.length / bs);
     broadcast('activity', {
       type: 'batch',
       message: `Batch ${batchNum}/${totalBatches} — ${batch.length} sites (${startOffset + completed}/${sitesTotal} done)`,
     });
 
     await Promise.all(batch.map(async (site) => {
-      await testSite(site);
+      await testSite(site, useAllCountries);
       completed++;
       sitesProcessed = startOffset + completed;
     }));
 
-    // Poll credits after each batch for live spend tracking
+    // Broadcast run stats immediately (non-blocking)
     if (activeRun) {
-      try {
-        const r = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
-        const data = await r.json();
-        const currentCredits = data.credit_coin ?? null;
-        if (activeRun.creditsStart !== null && currentCredits !== null) {
-          activeRun.creditsSpent = +(activeRun.creditsStart - currentCredits).toFixed(2);
-          broadcast('credits-update', { credits: currentCredits, spent: activeRun.creditsSpent });
-        }
-      } catch {}
+      broadcast('run-update', {
+        id: activeRun.number,
+        totalProbes: activeRun.totalProbes,
+        passProbes: activeRun.passProbes,
+        failProbes: activeRun.failProbes,
+        totalBandwidth: activeRun.totalBandwidth,
+        creditsSpent: activeRun.creditsSpent,
+      });
+      // Credit poll in background — don't block next batch
+      fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.credit_coin != null && activeRun) {
+            if (activeRun.creditsStart === null) activeRun.creditsStart = data.credit_coin;
+            activeRun.creditsSpent = +(activeRun.creditsStart - data.credit_coin).toFixed(2);
+            broadcast('run-update', { id: activeRun.number, creditsSpent: activeRun.creditsSpent });
+          }
+        })
+        .catch(() => {});
     }
 
-    if (i + BATCH_SIZE < siteList.length && testing) await sleep(BATCH_GAP);
+    if (i + bs < siteList.length && testing && batchGap > 0) await sleep(batchGap);
+  }
+}
+
+// ─── Fire All Runner (no batching) ───
+
+async function runFireAll(siteList, label, startOffset = 0, useAllCountries = false) {
+  const SCOUT_KEY = getScoutKey();
+  broadcast('activity', {
+    type: 'fire-all',
+    message: `${label} — firing ALL ${siteList.length} sites simultaneously`,
+  });
+
+  let completed = 0;
+  await Promise.all(siteList.map(async (site) => {
+    await testSite(site, useAllCountries);
+    completed++;
+    sitesProcessed = startOffset + completed;
+  }));
+
+  // Credits poll once at the end
+  if (activeRun) {
+    try {
+      const r = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
+      const data = await r.json();
+      const currentCredits = data.credit_coin ?? null;
+      if (activeRun.creditsStart !== null && currentCredits !== null) {
+        activeRun.creditsSpent = +(activeRun.creditsStart - currentCredits).toFixed(2);
+        broadcast('credits-update', { credits: currentCredits, spent: activeRun.creditsSpent });
+      }
+    } catch {}
+  }
+}
+
+// ─── Run Sites (picks batch or fire-all) ───
+
+async function runSites(siteList, label, startOffset = 0, useAllCountries = false) {
+  if (fireAllMode) {
+    await runFireAll(siteList, label, startOffset, useAllCountries);
+  } else {
+    await runBatch(siteList, label, startOffset, useAllCountries);
   }
 }
 
@@ -283,55 +379,33 @@ export async function autoRun(type = 'full') {
   const results = getResults();
   const SCOUT_KEY = getScoutKey();
 
-  // Check for paused run to restore
-  const paused = loadPausedRun();
-  let run;
+  // Start run immediately — no blocking I/O
+  const run = startRun(type);
+  run.elapsedBeforePause = 0;
+  run.resumedAt = run.startedAt;
 
-  if (paused && paused.number && type === 'full') {
-    // Resume paused run — restore all state
-    run = paused;
-    run.resumedAt = new Date().toISOString();
-    activeRun = run;
-
-    const index = loadRunsIndex();
-    index.activeRun = run.number;
-    saveRunsIndex(index);
-
-    broadcast('run-start', {
-      id: run.number, type: run.type, startedAt: run.startedAt,
-      resumed: true, elapsedBeforePause: run.elapsedBeforePause || 0,
-      creditsSpent: run.creditsSpent, totalProbes: run.totalProbes,
-      totalBandwidth: run.totalBandwidth,
-    });
-    clearPausedRun();
-  } else {
-    // Fresh run
-    run = startRun(type);
-    run.elapsedBeforePause = 0;
-    run.resumedAt = run.startedAt;
-
-    // Carry forward existing data from previous probes in current results
-    for (const r of Object.values(results)) {
-      const hist = r.history || [];
-      for (const h of hist) {
-        run.totalProbes++;
-        if (h.status === 'pass') run.passProbes++;
-        else run.failProbes++;
-        run.totalBandwidth += h.contentLength || 0;
-      }
-      run.siteResults[r.url] = r.verdict;
+  // Quick carry-forward
+  for (const r of Object.values(results)) {
+    run.totalProbes += r.totalProbes || 0;
+    run.passProbes += r.passedProbes || 0;
+    run.failProbes += (r.totalProbes || 0) - (r.passedProbes || 0);
+    // Sum bandwidth from nodeResults (fast, no history scan)
+    for (const nr of Object.values(r.nodeResults || {})) {
+      run.totalBandwidth += nr.contentLength || 0;
     }
-
-    // Capture starting credits
-    try {
-      const r = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
-      const data = await r.json();
-      run.creditsStart = data.credit_coin ?? null;
-    } catch (err) {
-      console.warn(`Failed to fetch start credits: ${err.message}`);
-    }
-    clearPausedRun();
+    run.siteResults[r.url] = r.verdict;
   }
+
+  // Capture starting credits BEFORE probes begin
+  try {
+    const cr = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
+    const cData = await cr.json();
+    run.creditsStart = cData.credit_coin ?? null;
+  } catch (err) {
+    console.warn(`Failed to fetch start credits: ${err.message}`);
+  }
+
+  const mode = fireAllMode ? 'fire-all' : `batch ${batchSize}`;
 
   if (type === 'retry') {
     const failed = sites.filter((s) => results[s.url]?.verdict === 'FAIL');
@@ -341,9 +415,9 @@ export async function autoRun(type = 'full') {
     phase = 'retrying';
     broadcast('phase', {
       phase: 'retrying', count: failed.length,
-      message: `Test #${run.number} — Retrying ${failed.length} failed sites (${BATCH_SIZE} parallel)...`,
+      message: `Test #${run.number} — Retrying ${failed.length} failed sites (${mode})...`,
     });
-    await runBatch(failed, `Test #${run.number} retry`, sites.length - failed.length);
+    await runSites(failed, `Test #${run.number} retry`, sites.length - failed.length);
   } else {
     const untested = sites.filter((s) => !results[s.url]);
     const failed = sites.filter((s) => results[s.url]?.verdict === 'FAIL');
@@ -356,9 +430,33 @@ export async function autoRun(type = 'full') {
     phase = 'scanning';
     broadcast('phase', {
       phase: 'scanning', count: allTargets.length,
-      message: `Test #${run.number} — Testing ${allTargets.length} remaining of ${sites.length} sites (${BATCH_SIZE} parallel)...`,
+      message: `Test #${run.number} — Testing ${allTargets.length} remaining of ${sites.length} sites (${mode})...`,
     });
-    await runBatch(allTargets, `Test #${run.number}`, alreadyPassed);
+    await runSites(allTargets, `Test #${run.number}`, alreadyPassed);
+  }
+
+  // Auto-retest failed sites
+  console.log(`  [runner] auto-retest check: testing=${testing} enabled=${autoRetestEnabled} max=${autoRetestMax}`);
+  if (testing && autoRetestEnabled) {
+    for (let retryRound = 1; retryRound <= autoRetestMax; retryRound++) {
+      if (!testing) break;
+      const freshResults = getResults();
+      const stillFailed = sites.filter((s) => freshResults[s.url]?.verdict === 'FAIL');
+      if (stillFailed.length === 0) break;
+
+      // Expand to all countries after the configured retry threshold
+      const useAll = retryRound >= expandCountriesAfter;
+      const countryLabel = useAll ? 'all 61 countries' : `${getActiveCountries().length} countries`;
+
+      phase = 'auto-retest';
+      const retestCountries = useAll ? COUNTRIES_ALL : getActiveCountries();
+      broadcast('phase', {
+        phase: 'auto-retest', count: stillFailed.length, round: retryRound, maxRounds: autoRetestMax,
+        countries: retestCountries,
+        message: `Test #${run.number} — Retest ${retryRound}/${autoRetestMax}: ${stillFailed.length} sites (${countryLabel})...`,
+      });
+      await runSites(stillFailed, `Retest ${retryRound}/${autoRetestMax}`, sites.length - stillFailed.length, useAll);
+    }
   }
 
   finish();
@@ -374,33 +472,62 @@ export async function retryRun(sites, failed) {
 
   const run = continueRun('retry');
 
-  // Carry forward existing data
+  // Quick carry-forward
   for (const r of Object.values(results)) {
-    const hist = r.history || [];
-    for (const h of hist) {
-      run.totalProbes++;
-      if (h.status === 'pass') run.passProbes++;
-      else run.failProbes++;
-      run.totalBandwidth += h.contentLength || 0;
-    }
+    run.totalProbes += r.totalProbes || 0;
+    run.passProbes += r.passedProbes || 0;
+    run.failProbes += (r.totalProbes || 0) - (r.passedProbes || 0);
+    for (const nr of Object.values(r.nodeResults || {})) run.totalBandwidth += nr.contentLength || 0;
     run.siteResults[r.url] = r.verdict;
   }
 
+  // Capture starting credits BEFORE probes begin
   try {
-    const r = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
-    const data = await r.json();
-    run.creditsStart = data.credit_coin ?? null;
-  } catch {}
+    const cr = await fetch(SCOUT_USER_URL, { headers: { 'Authorization': SCOUT_KEY } });
+    const cData = await cr.json();
+    if (cData.credit_coin != null) run.creditsStart = cData.credit_coin;
+  } catch (err) {
+    console.warn(`Failed to fetch start credits: ${err.message}`);
+  }
+
+  const useAll = retryAllCountries;
+  const mode = fireAllMode ? 'fire-all' : `batch ${batchSize}`;
+  const countryLabel = useAll ? 'all countries' : `${getActiveCountries().length} countries`;
 
   run.sitesTotal = sites.length;
   sitesTotal = sites.length;
   sitesProcessed = sites.length - failed.length;
+  const retryCountries = useAll ? COUNTRIES_ALL : getActiveCountries();
   phase = 'retrying';
   broadcast('phase', {
     phase: 'retrying', count: failed.length,
-    message: `Test #${run.number} — Retrying ${failed.length} failed sites (${BATCH_SIZE} parallel)...`,
+    countries: retryCountries,
+    message: `Test #${run.number} — Retrying ${failed.length} failed sites (${mode}, ${countryLabel})...`,
   });
-  await runBatch(failed, `Test #${run.number} retry`, sites.length - failed.length);
+  await runSites(failed, `Test #${run.number} retry`, sites.length - failed.length, useAll);
+
+  // Auto-retest if enabled
+  if (testing && autoRetestEnabled) {
+    for (let retryRound = 1; retryRound <= autoRetestMax; retryRound++) {
+      if (!testing) break;
+      const freshResults = getResults();
+      const stillFailed = sites.filter((s) => freshResults[s.url]?.verdict === 'FAIL');
+      if (stillFailed.length === 0) break;
+
+      const useAllR = retryRound >= expandCountriesAfter;
+      const cLabel = useAllR ? 'all 61 countries' : `${getActiveCountries().length} countries`;
+      const retestCountriesR = useAllR ? COUNTRIES_ALL : getActiveCountries();
+
+      phase = 'auto-retest';
+      broadcast('phase', {
+        phase: 'auto-retest', count: stillFailed.length, round: retryRound, maxRounds: autoRetestMax,
+        countries: retestCountriesR,
+        message: `Test #${run.number} — Retest ${retryRound}/${autoRetestMax}: ${stillFailed.length} sites (${cLabel})...`,
+      });
+      await runSites(stillFailed, `Retest ${retryRound}/${autoRetestMax}`, sites.length - stillFailed.length, useAllR);
+    }
+  }
+
   finish();
 }
 

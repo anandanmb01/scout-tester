@@ -42,7 +42,7 @@ export const COUNTRIES_ALL = [
 // ─── Batch Settings ───
 
 export const BATCH_SIZE = 5;
-export const BATCH_GAP = 2000;
+export const BATCH_GAP = 500;
 export const REAL_BLOCK_MS = 2000;
 
 // ─── Data Paths ───

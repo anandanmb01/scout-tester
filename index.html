@@ -4,31 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scout Block Check</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --bg: #F2F2F7; --surface: #FFFFFF; --surface-alt: #F9F9FB; --border: rgba(0,0,0,.08);
-    --border-light: rgba(0,0,0,.05); --text: #1C1C1E; --text-dim: rgba(0,0,0,.4);
-    --muted: rgba(0,0,0,.45); --pass: #34C759; --fail: #FF3B30; --warn: #FF9500;
-    --accent: #007AFF; --accent-light: #5AC8FA; --orange: #FF9500;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
-    --radius: 12px; --radius-sm: 8px; --radius-xs: 6px;
+    --bg: #090909; --surface: #151515; --surface-alt: #1d1d1d; --border: rgba(234,234,234,.1);
+    --border-light: rgba(234,234,234,.06); --text: #eaeaea; --text-80: #eaeaeacc;
+    --text-dim: #eaeaea99; --muted: #eaeaea80; --muted-60: #eaeaea60;
+    --pass: #6bc34a; --fail: #dc3545; --warn: #ffb137;
+    --accent: #0156fc; --accent-light: #3d7eff; --orange: #ffb137;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,.3);
+    --shadow-md: 0 8px 32px rgba(0,0,0,.4);
+    --radius: 1.875rem; --radius-sm: 1rem; --radius-xs: 0.5rem;
+    --glass-bg: rgba(9,9,9,.9); --glass-border: rgba(255,255,255,.08);
   }
   body {
-    font-family: -apple-system, 'Inter', BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     background: var(--bg); color: var(--text); min-height: 100vh;
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    scrollbar-width: thin; scrollbar-color: #353535 transparent;
   }
 
   /* ─── Header ─── */
   .header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    padding: 16px 24px; border-bottom: 1px solid var(--glass-border);
     position: sticky; top: 0; z-index: 100;
-    background: rgba(242, 242, 247, 0.85); backdrop-filter: blur(20px) saturate(1.8);
-    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    background: var(--glass-bg); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
   .header-left { display: flex; align-items: center; gap: 12px; }
   .header-logo { width: 28px; height: 28px; border-radius: 7px; }
@@ -37,30 +40,29 @@
 
   .credits {
     font-size: 13px; color: var(--muted); padding: 6px 12px;
-    background: var(--surface); border-radius: var(--radius-xs); border: none;
-    box-shadow: var(--shadow-sm);
+    background: var(--surface); border: 1px solid var(--glass-border);
+    border-radius: 2rem;
   }
-  .credits span { color: var(--warn); font-weight: 600; }
+  .credits span { color: var(--warn); font-weight: 700; }
 
   #run-select {
-    padding: 6px 10px; background: var(--surface); border: none;
-    color: var(--text); font-family: inherit; font-size: 13px; border-radius: var(--radius-xs);
-    font-weight: 600; max-width: 340px; cursor: pointer; box-shadow: var(--shadow-sm);
+    padding: 6px 12px; background: var(--surface); border: 1px solid var(--glass-border);
+    color: var(--text); font-family: inherit; font-size: 13px; border-radius: 2rem;
+    font-weight: 600; max-width: 340px; cursor: pointer;
   }
-  #run-select:focus { box-shadow: 0 0 0 3px rgba(0,122,255,.3); outline: none; }
+  #run-select:focus { border-color: var(--accent); outline: none; }
 
   button {
-    padding: 8px 16px; border: none; border-radius: var(--radius-sm);
-    background: var(--surface); color: var(--text); font-family: inherit;
-    font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s ease;
-    box-shadow: var(--shadow-sm);
+    padding: 8px 18px; border: 1px solid rgba(255,255,255,.12); border-radius: 2rem;
+    background: var(--surface); color: var(--text-80); font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all .3s ease;
   }
-  button:hover { background: #E8E8ED; }
+  button:hover { background: var(--surface-alt); border-color: rgba(255,255,255,.2); color: var(--text); }
   button:active { transform: scale(0.97); }
-  button.primary { background: var(--accent); color: #fff; }
-  button.primary:hover { background: #0066D6; }
-  button.danger { color: var(--fail); }
-  button:disabled { opacity: .35; cursor: default; transform: none; }
+  button.primary { background: #fff; color: #000; border-color: rgba(0,0,0,.5); }
+  button.primary:hover { background: var(--accent); color: #fff; border-color: transparent; }
+  button.danger { color: var(--fail); border-color: rgba(220,53,69,.3); }
+  button:disabled { opacity: .3; cursor: default; transform: none; }
 
   /* ─── Stats Row ─── */
   .stats {
@@ -68,14 +70,14 @@
     padding: 20px 24px;
   }
   .stat {
-    background: var(--surface); border: none; border-radius: var(--radius);
-    padding: 20px 16px; text-align: center; box-shadow: var(--shadow-sm);
+    background: var(--surface); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 20px 16px; text-align: center;
   }
   .stat-label {
     font-size: 12px; color: var(--muted); text-transform: uppercase;
     letter-spacing: .6px; margin-bottom: 8px; font-weight: 600;
   }
-  .stat-value { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+  .stat-value { font-size: 32px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--text); }
   .stat-value.pass { color: var(--pass); }
   .stat-value.fail { color: var(--fail); }
   .stat-value.warn { color: var(--orange); }
@@ -86,26 +88,26 @@
     padding: 0 24px 16px;
   }
   .run-stat {
-    background: var(--surface); border: none; border-radius: var(--radius);
-    padding: 16px; text-align: center; box-shadow: var(--shadow-sm);
+    background: var(--surface); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 16px; text-align: center;
   }
   .run-stat-label {
     font-size: 11px; color: var(--muted); text-transform: uppercase;
     letter-spacing: .6px; font-weight: 600; margin-bottom: 8px;
   }
   .run-stat-value {
-    font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text);
+    font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--text);
   }
-  .run-stat-value.highlight { color: var(--accent); }
+  .run-stat-value.highlight { color: var(--accent-light); }
   .run-stat-value.credits-color { color: var(--warn); }
   .run-stat-value.probes-color { color: var(--text); }
-  .run-stat-sub { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .run-stat-sub { font-size: 11px; color: var(--muted-60); font-variant-numeric: tabular-nums; margin-top: 4px; }
 
   /* ─── Progress Section ─── */
   .progress-section {
     margin: 0 24px 16px; padding: 20px;
-    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-sm);
-    display: flex; flex-direction: column; gap: 12px; border: none;
+    background: var(--surface); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); display: flex; flex-direction: column; gap: 12px;
   }
 
   .progress-header {
@@ -121,14 +123,14 @@
   }
   .progress-title .dot.live { background: var(--pass); animation: pulse-dot 1.5s infinite; }
   .progress-title .dot.wait { background: var(--warn); animation: pulse-dot 2s infinite; }
-  .progress-title .dot.idle { background: rgba(0,0,0,.2); }
+  .progress-title .dot.idle { background: rgba(255,255,255,.15); }
   @keyframes pulse-dot {
-    0% { box-shadow: 0 0 0 0 rgba(52,199,89,.5); }
-    70% { box-shadow: 0 0 0 6px rgba(52,199,89,0); }
-    100% { box-shadow: 0 0 0 0 rgba(52,199,89,0); }
+    0% { box-shadow: 0 0 0 0 rgba(107,195,74,.5); }
+    70% { box-shadow: 0 0 0 6px rgba(107,195,74,0); }
+    100% { box-shadow: 0 0 0 0 rgba(107,195,74,0); }
   }
   .progress-pct-large {
-    font-size: 28px; font-weight: 700; color: var(--text);
+    font-size: 28px; font-weight: 900; color: var(--text);
     font-variant-numeric: tabular-nums;
   }
   .progress-action {
@@ -144,12 +146,12 @@
     letter-spacing: .6px; font-weight: 600;
   }
   .eta-value {
-    font-size: 28px; font-weight: 700; color: var(--text);
+    font-size: 28px; font-weight: 900; color: var(--text);
     font-variant-numeric: tabular-nums;
   }
 
   .progress-track {
-    width: 100%; height: 6px; background: rgba(0,0,0,.06); border-radius: 3px;
+    width: 100%; height: 6px; background: rgba(255,255,255,.06); border-radius: 3px;
     overflow: hidden; position: relative;
   }
   .progress-fill {
@@ -165,7 +167,7 @@
     100% { transform: translateX(433%); }
   }
   .progress-fill.done {
-    background: linear-gradient(90deg, var(--pass), #4CD964);
+    background: linear-gradient(90deg, var(--pass), #8dd35f);
   }
 
   .progress-meta {
@@ -177,7 +179,8 @@
   /* ─── Run History Detail Panel ─── */
   .run-history {
     display: none; margin: 0 24px 16px; padding: 20px;
-    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    background: var(--surface); border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
   }
   .run-history.show { display: block; }
   .run-history-header {
@@ -188,11 +191,11 @@
     font-size: 15px; font-weight: 700; letter-spacing: -0.3px;
   }
   .run-history-header .close-btn {
-    padding: 4px 10px; font-size: 12px; color: var(--muted);
-    border: none; border-radius: var(--radius-xs); cursor: pointer;
-    background: var(--bg);
+    padding: 4px 12px; font-size: 12px; color: var(--muted);
+    border: 1px solid var(--glass-border); border-radius: 2rem; cursor: pointer;
+    background: transparent;
   }
-  .run-history-header .close-btn:hover { color: var(--text); background: #E8E8ED; }
+  .run-history-header .close-btn:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
 
   .run-detail-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;
@@ -200,14 +203,14 @@
   .run-metric {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px 12px; background: var(--bg); border-radius: var(--radius-xs);
-    border: none; font-size: 13px;
+    border: 1px solid var(--border-light); font-size: 13px;
   }
   .run-metric .label { color: var(--muted); }
   .run-metric .val { font-weight: 700; font-variant-numeric: tabular-nums; }
   .run-metric .val.good { color: var(--pass); }
   .run-metric .val.bad { color: var(--fail); }
   .run-metric .val.warn { color: var(--warn); }
-  .run-metric .val.blue { color: var(--accent); }
+  .run-metric .val.blue { color: var(--accent-light); }
 
   /* ─── Categories ─── */
   .categories {
@@ -215,14 +218,14 @@
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px;
   }
   .cat-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-  .cat-name { width: 90px; text-align: right; color: var(--muted); flex-shrink: 0; font-size: 12px; font-weight: 500; }
+  .cat-name { width: 90px; text-align: right; color: var(--muted); flex-shrink: 0; font-size: 12px; font-weight: 400; }
   .cat-bar-bg {
-    flex: 1; height: 8px; background: rgba(0,0,0,.05); border-radius: 4px;
+    flex: 1; height: 8px; background: rgba(255,255,255,.06); border-radius: 4px;
     overflow: hidden; display: flex; border: none;
   }
   .cat-bar-pass { background: var(--pass); height: 100%; transition: width .3s; border-radius: 4px; }
   .cat-bar-fail { background: var(--fail); height: 100%; transition: width .3s; }
-  .cat-count { width: 48px; font-size: 12px; color: var(--muted); font-weight: 500; }
+  .cat-count { width: 48px; font-size: 12px; color: var(--muted); font-weight: 400; }
 
   /* ─── Filters ─── */
   .filters {
@@ -230,23 +233,22 @@
     border-bottom: none; align-items: center;
   }
   .tab {
-    padding: 6px 14px; font-size: 13px; border-radius: var(--radius-sm); cursor: pointer;
-    background: transparent; border: none; color: var(--muted); font-weight: 500;
+    padding: 6px 14px; font-size: 13px; border-radius: 2.625rem; cursor: pointer;
+    background: transparent; border: 1px solid transparent; color: var(--muted); font-weight: 400;
     transition: all .15s;
   }
-  .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+  .tab.active { background: var(--surface); border-color: var(--text-80); color: var(--text); }
   .tab:hover { color: var(--text); }
   .sort-label { margin-left: auto; font-size: 12px; color: var(--muted); }
   .filters select {
-    background: var(--surface); border: none; color: var(--text);
-    font-family: inherit; font-size: 12px; padding: 6px 10px; border-radius: var(--radius-xs);
-    box-shadow: var(--shadow-sm);
+    background: var(--surface); border: 1px solid var(--glass-border); color: var(--text);
+    font-family: inherit; font-size: 12px; padding: 6px 12px; border-radius: 2rem;
   }
 
   /* ─── Table ─── */
   .table-wrap {
     margin: 0 24px 40px; background: var(--surface); border-radius: var(--radius);
-    box-shadow: var(--shadow-sm); overflow: hidden;
+    border: 1px solid var(--glass-border); overflow: hidden;
   }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th {
@@ -254,17 +256,17 @@
     color: var(--muted); text-transform: uppercase; letter-spacing: .5px;
     border-bottom: 1px solid var(--border); user-select: none; background: var(--surface-alt);
   }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; color: var(--text-80); }
   tr:hover td { background: var(--surface-alt); }
-  tr.active td { background: rgba(0,122,255,.04); }
+  tr.active td { background: rgba(1,86,252,.06); }
 
   .verdict {
-    display: inline-block; padding: 4px 10px; border-radius: var(--radius-xs);
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
+    display: inline-block; padding: 4px 12px; border-radius: 2rem;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
   }
-  .verdict.PASS { background: rgba(52,199,89,.1); color: var(--pass); }
-  .verdict.FAIL { background: rgba(255,59,48,.08); color: var(--fail); }
-  .verdict.TESTING { background: rgba(0,122,255,.08); color: var(--accent); }
+  .verdict.PASS { background: rgba(107,195,74,.12); color: var(--pass); }
+  .verdict.FAIL { background: rgba(220,53,69,.1); color: var(--fail); }
+  .verdict.TESTING { background: rgba(1,86,252,.1); color: var(--accent-light); }
 
   .node-dot {
     width: 20px; height: 16px; border-radius: 4px; font-size: 9px;
@@ -273,35 +275,35 @@
   }
   .node-dot.pass { background: var(--pass); }
   .node-dot.fail { background: var(--fail); }
-  .node-dot.none { background: rgba(0,0,0,.06); color: var(--muted); }
+  .node-dot.none { background: rgba(255,255,255,.06); color: var(--muted); }
 
   .evidence { font-size: 12px; color: var(--muted); white-space: nowrap; }
-  .evidence.clickable { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(0,0,0,.15); }
-  .evidence.clickable:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .evidence.clickable { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(255,255,255,.15); }
+  .evidence.clickable:hover { color: var(--accent-light); text-decoration-color: var(--accent-light); }
   .evidence .real { color: var(--fail); font-weight: 600; }
   .evidence .sig { color: var(--orange); font-weight: 600; }
   .url-cell {
-    font-weight: 500; max-width: 240px; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 400; max-width: 240px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; color: var(--text);
   }
-  .time-ago { color: var(--muted); font-size: 12px; }
-  .actions-cell button { padding: 4px 10px; font-size: 12px; font-weight: 500; }
+  .time-ago { color: var(--muted-60); font-size: 12px; }
+  .actions-cell button { padding: 4px 12px; font-size: 12px; font-weight: 400; }
 
-  /* Consistent column alignment */
   td, th { vertical-align: middle; }
 
-  /* ─── Block Detail Popup ─── */
+  /* ─── Popups ─── */
   .popup-overlay {
     display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,.3); z-index: 200;
+    background: rgba(0,0,0,.6); z-index: 200;
     align-items: center; justify-content: center;
-    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
   .popup-overlay.show { display: flex; }
   .popup {
-    background: var(--surface); border-radius: 16px; padding: 24px;
+    background: var(--surface); border: 1px solid var(--glass-border);
+    border-radius: var(--radius); padding: 24px;
     max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,.15), 0 4px 16px rgba(0,0,0,.1);
+    box-shadow: 0 16px 32px rgba(0,0,0,.5);
   }
   .popup-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -309,12 +311,12 @@
   }
   .popup-header h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
   .popup-close {
-    width: 28px; height: 28px; border-radius: 50%; border: none;
-    background: var(--bg); color: var(--muted); font-size: 16px;
+    width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--glass-border);
+    background: transparent; color: var(--muted); font-size: 16px;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     padding: 0; box-shadow: none;
   }
-  .popup-close:hover { background: #E0E0E5; color: var(--text); }
+  .popup-close:hover { background: var(--surface-alt); color: var(--text); }
   .popup-section { margin-bottom: 16px; }
   .popup-section-title {
     font-size: 11px; font-weight: 600; text-transform: uppercase;
@@ -323,7 +325,7 @@
   .popup-row {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px 12px; background: var(--bg); border-radius: var(--radius-xs);
-    margin-bottom: 4px; font-size: 13px;
+    border: 1px solid var(--border-light); margin-bottom: 4px; font-size: 13px;
   }
   .popup-row .label { color: var(--muted); }
   .popup-row .val { font-weight: 600; }
@@ -331,11 +333,11 @@
   .popup-row .val.fail { color: var(--fail); }
   .popup-row .val.warn { color: var(--warn); }
   .block-tag {
-    display: inline-block; padding: 4px 10px; border-radius: 20px;
+    display: inline-block; padding: 4px 12px; border-radius: 2rem;
     font-size: 12px; font-weight: 600; margin: 2px;
-    background: rgba(255,59,48,.08); color: var(--fail);
+    background: rgba(220,53,69,.12); color: var(--fail);
   }
-  .block-tag.warn { background: rgba(255,149,0,.1); color: var(--warn); }
+  .block-tag.warn { background: rgba(255,177,55,.12); color: var(--warn); }
 
   /* ─── Responsive ─── */
   @media (max-width: 900px) {
@@ -360,17 +362,22 @@
     <h1>SCOUT BLOCK CHECK</h1>
   </div>
   <div class="header-right">
-    <div class="credits">Credits: <span id="credits">...</span></div>
+    <div class="credits" id="credits-box" style="display:none">Credits: <span id="credits">...</span></div>
     <select id="run-select">
       <option value="">No tests yet</option>
     </select>
     <button class="primary" id="btn-new-test">New Test</button>
     <button id="btn-resume">Resume</button>
     <button id="btn-retry" style="color:var(--warn)">Retry Failed</button>
+    <label id="retry-all-toggle" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer;user-select:none" title="Retry failed sites with all 61 countries">
+      <input type="checkbox" id="chk-retry-all" style="cursor:pointer"> All 61
+    </label>
     <button class="danger" id="btn-stop" disabled>STOP</button>
     <button id="btn-restart" style="color:var(--muted)">Restart</button>
+    <button id="btn-queue">Batch: 5</button>
     <button id="btn-countries" style="color:var(--accent)">3 Countries</button>
     <button id="btn-export">Export</button>
+    <button id="btn-settings">Settings</button>
     <button id="btn-account">Account</button>
   </div>
 </div>
@@ -434,6 +441,41 @@
   </div>
 </div>
 
+<!-- ─── Live Log ─── -->
+<div style="padding:0 24px 12px">
+  <div onclick="document.getElementById('live-log').classList.toggle('collapsed')"
+    style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;user-select:none">
+    <span id="log-arrow" style="transition:transform .2s">&#9660;</span> Live Log
+    <span id="log-count" style="font-weight:400;color:var(--muted-60)"></span>
+  </div>
+  <div id="live-log" style="background:var(--bg);border:1px solid var(--glass-border);border-radius:var(--radius-xs);max-height:200px;overflow-y:auto;font-family:monospace;font-size:11px;color:var(--text-dim);padding:8px 12px;line-height:1.6">
+  </div>
+</div>
+<style>
+  #live-log.collapsed { display: none; }
+  #live-log.collapsed + #log-arrow { transform: rotate(-90deg); }
+</style>
+
+<!-- ─── Retest Progress Bar ─── -->
+<div class="progress-section" id="retest-bar" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="dot live" style="width:8px;height:8px;border-radius:50%;background:var(--warn);animation:pulse-dot 1.5s infinite"></div>
+      <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--warn)" id="retest-label">Auto-Retest</span>
+      <span style="font-size:12px;font-weight:600;color:var(--muted)" id="retest-round"></span>
+    </div>
+    <span style="font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums" id="retest-count"></span>
+  </div>
+  <div id="retest-countries" style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;line-height:1"></div>
+  <div class="progress-track">
+    <div class="progress-fill" id="retest-fill" style="width:0%;background:linear-gradient(90deg, var(--warn), #ffc547)"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
+    <span id="retest-sites"></span>
+    <span id="retest-pct"></span>
+  </div>
+</div>
+
 <!-- ─── Run History Detail (past run viewer) ─── -->
 <div class="run-history" id="run-history">
   <div class="run-history-header">
@@ -467,7 +509,7 @@
 <div class="table-wrap">
   <table>
     <thead id="thead"><tr>
-      <th>URL</th><th>Category</th><th>Verdict</th>
+      <th>URL</th><th>Category</th><th>Verdict</th><th>Prev</th>
       <th>FR</th><th>DE</th><th>GB</th>
       <th>Data Type</th><th>Evidence</th><th>Tested</th><th></th>
     </tr></thead>
@@ -483,6 +525,17 @@
       <button class="popup-close" onclick="document.getElementById('block-popup').classList.remove('show')">&#x2715;</button>
     </div>
     <div id="popup-body"></div>
+  </div>
+</div>
+
+<!-- Settings Popup -->
+<div class="popup-overlay" id="settings-popup" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="popup" style="max-width:460px">
+    <div class="popup-header">
+      <h3>Test Settings</h3>
+      <button class="popup-close" onclick="document.getElementById('settings-popup').classList.remove('show')">&#x2715;</button>
+    </div>
+    <div id="settings-body"></div>
   </div>
 </div>
 
@@ -507,19 +560,32 @@ let activeRunData = null;
 let currentRunId = null;
 let countryMode = 'default';
 let activeCountries = ['FR', 'DE', 'GB'];
+let prevPassed = {};
+
+// ─── Country Code → Flag Emoji ───
+
+function countryFlag(code) {
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
 
 // ─── Init ───
 
 async function init() {
-  const [s, r, runsData, cData] = await Promise.all([
+  const [s, r, runsData, cData, settingsData, ppData] = await Promise.all([
     fetch('/api/sites').then(r => r.json()),
     fetch('/api/results').then(r => r.json()),
     fetch('/api/runs').then(r => r.json()),
     fetch('/api/countries').then(r => r.json()),
+    fetch('/api/settings').then(r => r.json()),
+    fetch('/api/prev-passed').then(r => r.json()),
   ]);
+  prevPassed = ppData || {};
+  // Init retry-all toggle from settings
+  document.getElementById('chk-retry-all').checked = settingsData.retryAllCountries || false;
   countryMode = cData.mode;
   activeCountries = cData.active;
   updateCountryBtn();
+  updateQueueBtn();
   updateTableHeaders();
   sites = s;
   results = r.results || {};
@@ -556,6 +622,13 @@ async function init() {
 // ─── Credits ───
 
 async function fetchCredits() {
+  const acct = await fetch('/api/account').then(r => r.json());
+  const box = document.getElementById('credits-box');
+  if (!acct.connected) {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = '';
   const d = await fetch('/api/credits').then(r => r.json());
   document.getElementById('credits').textContent =
     typeof d.credits === 'number' ? d.credits.toFixed(1) : d.credits;
@@ -863,13 +936,34 @@ function connectSSE() {
       isTesting = true;
       setStatus('live', d.message);
     }
+    // Show/hide retest bar
+    const retestBar = document.getElementById('retest-bar');
+    if (d.phase === 'auto-retest' || d.phase === 'retrying') {
+      retestBar.style.display = '';
+      const label = d.phase === 'retrying' ? 'Retry Failed' : 'Auto-Retest';
+      document.getElementById('retest-label').textContent = label;
+      document.getElementById('retest-round').textContent = d.round ? `Round ${d.round}/${d.maxRounds}` : '';
+      document.getElementById('retest-count').textContent = d.count ? d.count + ' failed' : '';
+      // Render country flags
+      const countriesEl = document.getElementById('retest-countries');
+      if (d.countries && d.countries.length) {
+        const flags = d.countries.map(c =>
+          `<span style="font-size:14px;cursor:default" title="${c}">${countryFlag(c)}</span>`
+        );
+        countriesEl.innerHTML = `<span style="font-size:11px;color:var(--muted);margin-right:2px">${d.countries.length} countries:</span> ${flags.join(' ')}`;
+      } else {
+        countriesEl.innerHTML = '';
+      }
+    } else if (d.phase === 'idle') {
+      retestBar.style.display = 'none';
+    }
     updateBtns();
   });
 
   es.addEventListener('activity', e => {
     const d = JSON.parse(e.data);
-    const dot = 'live';
-    setStatus(dot, d.message);
+    setStatus('live', d.message);
+    appendLog(d.message);
   });
 
   es.addEventListener('pool-status', _e => { /* legacy — ignored */
@@ -919,10 +1013,24 @@ function connectSSE() {
     if (activeRunData) activeRunData.creditsSpent = d.spent;
   });
 
+  es.addEventListener('run-update', e => {
+    const d = JSON.parse(e.data);
+    if (activeRunData) {
+      if (d.totalProbes !== undefined) activeRunData.totalProbes = d.totalProbes;
+      if (d.passProbes !== undefined) activeRunData.passProbes = d.passProbes;
+      if (d.failProbes !== undefined) activeRunData.failProbes = d.failProbes;
+      if (d.totalBandwidth !== undefined) activeRunData.totalBandwidth = d.totalBandwidth;
+      if (d.creditsSpent !== undefined) activeRunData.creditsSpent = d.creditsSpent;
+      if (!viewingRun) updateRunStats(activeRunData);
+    }
+  });
+
   es.addEventListener('result', e => {
     const d = JSON.parse(e.data);
     results[d.url] = d;
     currentUrl = null;
+    const short = d.url.replace(/https?:\/\/(www\.)?/, '');
+    appendLog(`${d.verdict === 'PASS' ? '\u2705' : '\u274c'} ${short} — ${d.dataType || 'Text'}`);
     updateAll();
   });
 
@@ -930,7 +1038,7 @@ function connectSSE() {
     // Individual probe completed, heartbeat will carry aggregated data
   });
 
-  es.addEventListener('done', e => {
+  es.addEventListener('done', async e => {
     const d = JSON.parse(e.data);
     isTesting = false;
     setStatus('idle', `Done \u2014 ${d.pass} pass, ${d.fail} fail, ${d.untested || 0} untested`);
@@ -943,6 +1051,9 @@ function connectSSE() {
     document.getElementById('progress-pct-large').style.display = '';
     document.getElementById('eta-block').style.display = '';
     document.getElementById('eta-value').textContent = '00:00';
+    // Re-fetch full state to ensure counts are accurate
+    const fresh = await fetch('/api/results').then(r => r.json());
+    results = fresh.results || {};
     updateAll();
     fetchCredits();
     currentRunId = null;
@@ -966,17 +1077,19 @@ function connectSSE() {
       if (d.activeRun.elapsedBeforePause !== undefined) elapsedOffset = d.activeRun.elapsedBeforePause;
       if (d.activeRun.resumedAt && !runStartTime) runStartTime = new Date(d.activeRun.resumedAt).getTime();
 
-      // Only update run stats if viewing live
+      // Only update run stats if viewing live — use merged activeRunData, not raw heartbeat
       if (!viewingRun) {
-        updateRunStats(d.activeRun);
+        updateRunStats(activeRunData);
       }
 
       updateProgressFromHeartbeat(d.activeRun, d.sitesProcessed, d.sitesTotal);
     }
 
+    // Always update stats from heartbeat
+    updateAll();
+
     if (d.currentUrl && d.currentUrl !== currentUrl) {
       currentUrl = d.currentUrl;
-      updateTable();
     }
     updateBtns();
   });
@@ -1003,11 +1116,13 @@ function updateAll() { updateStats(); updateCats(); updateTable(); updateBtns();
 function v(url) { return results[url]?.verdict || null; }
 
 function updateStats() {
-  const total = sites.length;
-  const pass = sites.filter(s => v(s.url) === 'PASS').length;
-  const fail = sites.filter(s => v(s.url) === 'FAIL').length;
-  const untested = sites.filter(s => !results[s.url]).length;
-  const tested = total - untested;
+  // Count from results directly — most accurate
+  const allResults = Object.values(results);
+  const pass = allResults.filter(r => r.verdict === 'PASS').length;
+  const fail = allResults.filter(r => r.verdict === 'FAIL').length;
+  const tested = pass + fail;
+  const total = Math.max(sites.length, tested);
+  const untested = total - tested;
   const rate = tested > 0 ? Math.round((pass / tested) * 100) + '%' : '-';
   document.getElementById('s-total').textContent = total;
   document.getElementById('s-pass').textContent = pass;
@@ -1072,12 +1187,15 @@ function updateTable() {
     if (r) {
       const rb = r.realBlocks || 0;
       const sigs = r.blockSignals || [];
+      const nrKeys = Object.keys(nr);
+      const nrPass = nrKeys.filter(c => nr[c]?.passed).length;
       const parts = [];
       if (rb > 0) parts.push(`<span class="real">${rb} block${rb > 1 ? 's' : ''}</span>`);
       if (sigs.length > 0) parts.push(`<span class="sig">${sigs.slice(0, 2).join(', ')}</span>`);
+      if (nrKeys.length > 3) parts.push(`<span style="color:var(--muted)">${nrPass}/${nrKeys.length} countries</span>`);
       if (parts.length === 0 && r.verdict === 'PASS') {
         const best = (r.history || []).find(h => h.status === 'pass');
-        if (best) parts.push(`${best.country} ${(best.responseTime / 1000).toFixed(1)}s`);
+        if (best) parts.push(`${countryFlag(best.country)} ${(best.responseTime / 1000).toFixed(1)}s`);
       }
       const hasDetails = r.verdict === 'FAIL' || sigs.length > 0 || rb > 0;
       const evText = parts.join(' &middot; ') || (r.verdict === 'PASS' ? 'OK' : 'No data');
@@ -1093,6 +1211,7 @@ function updateTable() {
       <td class="url-cell" title="${row.url}">${strip(row.url)}</td>
       <td style="color:var(--muted)">${row.category}</td>
       <td><span class="verdict ${verdict}">${verdict}</span></td>
+      <td style="text-align:center">${prevPassed[row.url] ? `<span style="color:var(--pass)">${prevPassed[row.url]}/${pastRuns.length}</span>` : '<span style="color:var(--muted)">-</span>'}</td>
       ${activeCountries.map(c => `<td>${nd(c)}</td>`).join('')}
       <td style="color:var(--muted)">${r?.dataType || 'Pending'}</td>
       <td>${ev}</td>
@@ -1133,23 +1252,11 @@ function timeAgo(iso) {
 
 async function newTest() {
   if (isTesting) return;
-  // Save current results as a run first (if there are results)
-  if (Object.keys(results).length > 0) {
-    await fetch('/api/runs/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    const runsData = await fetch('/api/runs').then(r => r.json());
-    pastRuns = (runsData.runs || []).map(r => ({ ...r, id: r.id || r.number }));
-  }
-  // Clear results and start fresh
-  await fetch('/api/clear', { method: 'POST' });
-  results = {};
-  updateAll();
-  resetProgress();
-  // Start new run
-  const r = await fetch('/api/run', { method: 'POST' }).then(r => r.json());
-  if (r.error) return alert(r.error);
   isTesting = true;
+  results = {};
+  resetProgress();
   updateBtns();
-  populateRunSelect();
+  fetch('/api/new-test', { method: 'POST' });
 }
 
 async function resume() {
@@ -1300,34 +1407,45 @@ function showBlockDetail(url) {
     </div>`;
   }
 
-  // Per-Country Results
+  // Per-Country Results — show ALL tested countries
+  const testedCountries = Object.keys(nr);
+  const passCountries = testedCountries.filter(c => nr[c]?.passed);
+  const failCountries = testedCountries.filter(c => !nr[c]?.passed);
+
   html += `<div class="popup-section">
-    <div class="popup-section-title">Country Results</div>`;
-  for (const country of ['FR', 'DE', 'GB']) {
+    <div class="popup-section-title">Country Results (${testedCountries.length} tested — ${passCountries.length} pass, ${failCountries.length} fail)</div>`;
+
+  // Country analysis — detect patterns
+  if (testedCountries.length > 3 && failCountries.length > 0 && passCountries.length > 0) {
+    html += `<div style="background:rgba(255,177,55,.08);border:1px solid rgba(255,177,55,.2);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--warn)">
+      Geo-selective blocking — passes in ${passCountries.map(c => countryFlag(c)).join(' ')} but fails in ${failCountries.length} other countries
+    </div>`;
+  } else if (testedCountries.length > 3 && passCountries.length === 0) {
+    html += `<div style="background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.2);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--fail)">
+      Global block — failed in all ${testedCountries.length} countries tested
+    </div>`;
+  }
+
+  // Pass countries first, then fail
+  for (const country of [...passCountries, ...failCountries]) {
     const cn = nr[country];
-    if (cn) {
-      html += `<div class="popup-row">
-        <span class="label">${country}</span>
-        <span class="val ${cn.passed ? 'pass' : 'fail'}">${cn.passed ? 'PASS' : 'FAIL'} &middot; ${(cn.responseTime / 1000).toFixed(1)}s &middot; ${formatBytes(cn.contentLength || 0)}</span>
-      </div>`;
-    } else {
-      html += `<div class="popup-row">
-        <span class="label">${country}</span>
-        <span class="val" style="color:var(--muted)">Not tested</span>
-      </div>`;
-    }
+    html += `<div class="popup-row">
+      <span class="label">${countryFlag(country)} ${country}</span>
+      <span class="val ${cn.passed ? 'pass' : 'fail'}">${cn.passed ? 'PASS' : 'FAIL'} &middot; ${(cn.responseTime / 1000).toFixed(1)}s &middot; ${formatBytes(cn.contentLength || 0)}${cn.errorCode && !cn.passed ? ' &middot; ' + cn.errorCode : ''}</span>
+    </div>`;
   }
   html += '</div>';
 
   // Probe History
   if (hist.length > 0) {
+    const shown = hist.slice(-20).reverse();
     html += `<div class="popup-section">
-      <div class="popup-section-title">Probe History (last ${hist.length})</div>`;
-    for (const h of hist.slice(-6).reverse()) {
+      <div class="popup-section-title">Probe History (${shown.length} of ${hist.length})</div>`;
+    for (const h of shown) {
       const time = new Date(h.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       html += `<div class="popup-row">
-        <span class="label">${h.country} &middot; ${time}</span>
-        <span class="val ${h.status === 'pass' ? 'pass' : 'fail'}">${h.status.toUpperCase()} &middot; ${(h.responseTime / 1000).toFixed(1)}s</span>
+        <span class="label">${countryFlag(h.country)} ${h.country} &middot; ${time}</span>
+        <span class="val ${h.status === 'pass' ? 'pass' : 'fail'}">${h.status.toUpperCase()} &middot; ${(h.responseTime / 1000).toFixed(1)}s${h.errorCode && h.status === 'fail' ? ' &middot; ' + h.errorCode : ''}</span>
       </div>`;
     }
     html += '</div>';
@@ -1335,6 +1453,181 @@ function showBlockDetail(url) {
 
   body.innerHTML = html;
   document.getElementById('block-popup').classList.add('show');
+}
+
+// ─── Live Log ───
+
+let logCount = 0;
+function appendLog(msg) {
+  const log = document.getElementById('live-log');
+  if (!log) return;
+  const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const line = document.createElement('div');
+  line.textContent = `[${time}] ${msg}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+  logCount++;
+  document.getElementById('log-count').textContent = `(${logCount})`;
+  // Keep max 500 lines
+  while (log.children.length > 500) log.removeChild(log.firstChild);
+}
+
+// ─── Queue Toggle ───
+
+async function toggleQueue() {
+  if (isTesting) return alert('Cannot change while testing');
+  const current = await fetch('/api/settings').then(r => r.json());
+
+  let nextFireAll = false;
+  let nextBatch = 5;
+
+  if (current.fireAllMode) {
+    // Fire All → Batch 5
+    nextFireAll = false; nextBatch = 5;
+  } else if (current.batchSize >= 30) {
+    // Batch 30 → Fire All
+    nextFireAll = true; nextBatch = 30;
+  } else if (current.batchSize >= 15) {
+    // Batch 15 → Batch 30
+    nextBatch = 30;
+  } else {
+    // Batch 5 → Batch 15
+    nextBatch = 15;
+  }
+
+  await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fireAll: nextFireAll, batchSize: nextBatch }),
+  });
+  updateQueueBtn();
+}
+
+async function updateQueueBtn() {
+  const s = await fetch('/api/settings').then(r => r.json());
+  const btn = document.getElementById('btn-queue');
+  if (s.fireAllMode) {
+    btn.textContent = 'Fire All';
+    btn.style.color = 'var(--fail)';
+  } else {
+    btn.textContent = 'Batch: ' + (s.batchSize || 5);
+    btn.style.color = '';
+  }
+}
+
+// ─── Settings ───
+
+async function showSettings() {
+  const popup = document.getElementById('settings-popup');
+  const body = document.getElementById('settings-body');
+  popup.classList.add('show');
+
+  const [settings, countries] = await Promise.all([
+    fetch('/api/settings').then(r => r.json()),
+    fetch('/api/countries').then(r => r.json()),
+  ]);
+
+  const I = 'width:70px;padding:4px 8px;border:1px solid var(--glass-border);border-radius:var(--radius-xs);background:var(--bg);font-size:13px;color:var(--text);text-align:center';
+  const chk = (id, val) => `<input type="checkbox" id="${id}" ${val ? 'checked' : ''}>`;
+  const num = (id, val, min, max, step) => `<input type="number" id="${id}" value="${val}" min="${min}" max="${max}" ${step ? 'step="'+step+'"' : ''} style="${I}">`;
+
+  body.innerHTML = `
+    <div class="popup-section">
+      <div class="popup-section-title">Request Mode</div>
+      <div class="popup-row">
+        <span class="label">Fire All at Once</span>
+        <label style="cursor:pointer">${chk('s-fireAll', settings.fireAllMode)}</label>
+      </div>
+      <div class="popup-row">
+        <span class="label">Batch Size</span>
+        ${num('s-batchSize', settings.batchSize, 1, 100)}
+      </div>
+      <div class="popup-row">
+        <span class="label">Gap Between Batches (ms)</span>
+        ${num('s-batchGap', settings.batchGap, 0, 10000, 50)}
+      </div>
+    </div>
+
+    <div class="popup-section">
+      <div class="popup-section-title">Auto-Retest Failed</div>
+      <div class="popup-row">
+        <span class="label">Enabled</span>
+        <label style="cursor:pointer">${chk('s-autoRetest', settings.autoRetestEnabled)}</label>
+      </div>
+      <div class="popup-row">
+        <span class="label">Max Retries</span>
+        ${num('s-autoRetestMax', settings.autoRetestMax, 1, 100)}
+      </div>
+    </div>
+
+    <div class="popup-section">
+      <div class="popup-section-title">Expand Countries on Retry</div>
+      <div class="popup-row">
+        <span class="label">Try All Countries After Retry #</span>
+        ${num('s-expandAfter', settings.expandCountriesAfter || 2, 1, 99)}
+      </div>
+      <div style="font-size:11px;color:var(--muted-60);padding:4px 12px">
+        After this many retries still fail, switch to all 61 countries for remaining retries. Must be less than Max Retries.
+      </div>
+    </div>
+
+    <div class="popup-section">
+      <div class="popup-section-title">Countries (${countries.active.length} active)</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+        <button onclick="setCountryPreset('default')" style="font-size:11px;padding:6px 14px" class="${countries.mode === 'default' ? 'primary' : ''}">Top 3</button>
+        <button onclick="setCountryPreset('all')" style="font-size:11px;padding:6px 14px" class="${countries.mode === 'all' ? 'primary' : ''}">All ${countries.available.length}</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted-60);padding:4px 0;line-height:1.6">
+        ${countries.active.join(', ')}
+      </div>
+    </div>
+
+    <button class="primary" onclick="saveAllSettings()" style="width:100%;margin-top:8px;padding:12px">Save Settings</button>
+  `;
+}
+
+async function saveAllSettings() {
+  const body = {
+    fireAll: document.getElementById('s-fireAll')?.checked || false,
+    batchSize: document.getElementById('s-batchSize')?.value || 5,
+    batchGap: document.getElementById('s-batchGap')?.value || 500,
+    autoRetest: document.getElementById('s-autoRetest')?.checked || false,
+    autoRetestMax: document.getElementById('s-autoRetestMax')?.value || 3,
+    expandCountriesAfter: document.getElementById('s-expandAfter')?.value || 2,
+  };
+  await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  updateQueueBtn();
+  document.getElementById('settings-popup').classList.remove('show');
+}
+
+async function saveSetting(key, value) {
+  const body = {};
+  body[key] = value;
+  await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  showSettings();
+}
+
+async function setCountryPreset(mode) {
+  await fetch('/api/countries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode }),
+  }).then(r => r.json());
+  const cData = await fetch('/api/countries').then(r => r.json());
+  countryMode = cData.mode;
+  activeCountries = cData.active;
+  updateCountryBtn();
+  updateTableHeaders();
+  updateTable();
+  showSettings();
 }
 
 // ─── Country Mode ───
@@ -1348,7 +1641,7 @@ function updateTableHeaders() {
   const thead = document.getElementById('thead');
   const countryCols = activeCountries.map(c => `<th>${c}</th>`).join('');
   thead.innerHTML = `<tr>
-    <th>URL</th><th>Category</th><th>Verdict</th>
+    <th>URL</th><th>Category</th><th>Verdict</th><th>Prev</th>
     ${countryCols}
     <th>Data Type</th><th>Evidence</th><th>Tested</th><th></th>
   </tr>`;
@@ -1371,6 +1664,20 @@ async function toggleCountries() {
 
 // ─── Account ───
 
+function getSavedKeys() {
+  try { return JSON.parse(localStorage.getItem('scout_keys') || '[]'); } catch { return []; }
+}
+
+function saveKeyToLocal(key) {
+  const keys = getSavedKeys();
+  if (!keys.includes(key)) { keys.push(key); localStorage.setItem('scout_keys', JSON.stringify(keys)); }
+}
+
+function removeKeyFromLocal(key) {
+  const keys = getSavedKeys().filter(k => k !== key);
+  localStorage.setItem('scout_keys', JSON.stringify(keys));
+}
+
 async function showAccount() {
   const popup = document.getElementById('account-popup');
   const body = document.getElementById('account-body');
@@ -1378,36 +1685,67 @@ async function showAccount() {
   body.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px">Loading...</div>';
 
   const data = await fetch('/api/account').then(r => r.json());
+  const savedKeys = getSavedKeys();
+
+  let html = '';
 
   if (data.connected) {
-    body.innerHTML = `
+    // Save this key locally
+    saveKeyToLocal(data.key);
+
+    html += `
       <div class="popup-section">
-        <div class="popup-section-title">Connected</div>
+        <div class="popup-section-title">Active Account</div>
         <div class="popup-row" style="cursor:pointer" onclick="copyKey(this)" title="Click to copy">
           <span class="label">API Key</span>
-          <span class="val" style="font-size:12px;font-family:monospace;word-break:break-all">${data.key}</span>
+          <span class="val" style="font-size:11px;font-family:monospace;word-break:break-all">${data.key}</span>
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center" id="copy-hint">Click the key to copy</div>
-      </div>
-      <div style="text-align:center;margin-top:16px">
-        <button class="danger" onclick="disconnectAccount()" style="width:100%">Disconnect &amp; Remove Key</button>
-      </div>
-    `;
-  } else {
-    body.innerHTML = `
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center" id="copy-hint">Click to copy</div>
+      </div>`;
+
+    if (data.credits !== null) {
+      html += `
       <div class="popup-section">
-        <div class="popup-section-title">Connect Your Scout API Key</div>
-        <div style="margin-bottom:12px">
-          <input type="text" id="api-key-input" placeholder="scout-c1_your_key_here"
-            style="width:100%;padding:10px 12px;border:none;border-radius:var(--radius-xs);
-            background:var(--bg);font-family:monospace;font-size:13px;color:var(--text);
-            box-shadow:inset 0 1px 3px rgba(0,0,0,.06)">
-        </div>
-        <button class="primary" onclick="connectAccount()" style="width:100%">Connect</button>
-      </div>
-    `;
-    setTimeout(() => document.getElementById('api-key-input')?.focus(), 100);
+        <div class="popup-section-title">Account Info</div>
+        <div class="popup-row"><span class="label">Credits</span><span class="val" style="color:var(--warn)">${typeof data.credits === 'number' ? data.credits.toFixed(2) : data.credits}</span></div>
+        ${data.totalJobs ? `<div class="popup-row"><span class="label">Total Jobs</span><span class="val">${data.totalJobs}</span></div>` : ''}
+      </div>`;
+    }
   }
+
+  // Saved keys section
+  const otherKeys = savedKeys.filter(k => k !== data.key);
+  if (otherKeys.length > 0) {
+    html += `<div class="popup-section">
+      <div class="popup-section-title">Saved Keys</div>`;
+    otherKeys.forEach(k => {
+      const masked = k.slice(0, 12) + '...' + k.slice(-4);
+      html += `<div class="popup-row">
+        <span class="label" style="font-family:monospace;font-size:11px">${masked}</span>
+        <span>
+          <button onclick="switchKey('${k}')" style="font-size:11px;padding:3px 8px;margin-right:4px">Use</button>
+          <button onclick="forgetKey('${k}')" style="font-size:11px;padding:3px 8px;color:var(--fail)">Forget</button>
+        </span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Add new key
+  html += `
+    <div class="popup-section">
+      <div class="popup-section-title">${data.connected ? 'Add Another Key' : 'Connect Your Scout API Key'}</div>
+      <div style="margin-bottom:8px">
+        <input type="text" id="api-key-input" placeholder="scout-c1_your_key_here"
+          style="width:100%;padding:10px 12px;border:none;border-radius:var(--radius-xs);
+          background:var(--bg);font-family:monospace;font-size:13px;color:var(--text);
+          box-shadow:inset 0 1px 3px rgba(0,0,0,.06)">
+      </div>
+      <button class="primary" onclick="connectAccount()" style="width:100%">Connect</button>
+    </div>`;
+
+  body.innerHTML = html;
+  if (!data.connected) setTimeout(() => document.getElementById('api-key-input')?.focus(), 100);
 }
 
 async function connectAccount() {
@@ -1420,14 +1758,23 @@ async function connectAccount() {
     body: JSON.stringify({ key }),
   }).then(r => r.json());
   if (r.error) return alert(r.error);
+  saveKeyToLocal(key);
   fetchCredits();
   showAccount();
 }
 
-async function disconnectAccount() {
-  if (!confirm('Remove API key? You will need to re-enter it to run tests.')) return;
-  await fetch('/api/account/disconnect', { method: 'POST' });
-  document.getElementById('credits').textContent = '...';
+async function switchKey(key) {
+  await fetch('/api/account/connect', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key }),
+  });
+  fetchCredits();
+  showAccount();
+}
+
+function forgetKey(key) {
+  removeKeyFromLocal(key);
   showAccount();
 }
 
@@ -1435,7 +1782,7 @@ function copyKey(el) {
   const val = el.querySelector('.val').textContent;
   navigator.clipboard.writeText(val).then(() => {
     const hint = document.getElementById('copy-hint');
-    if (hint) { hint.textContent = 'Copied!'; setTimeout(() => hint.textContent = 'Click the key to copy', 2000); }
+    if (hint) { hint.textContent = 'Copied!'; setTimeout(() => hint.textContent = 'Click to copy', 2000); }
   });
 }
 
@@ -1446,9 +1793,18 @@ document.getElementById('btn-resume').onclick = resume;
 document.getElementById('btn-stop').onclick = stop;
 document.getElementById('btn-retry').onclick = retryFailed;
 document.getElementById('btn-restart').onclick = restart;
+document.getElementById('btn-queue').onclick = toggleQueue;
 document.getElementById('btn-countries').onclick = toggleCountries;
+document.getElementById('btn-settings').onclick = showSettings;
 document.getElementById('btn-export').onclick = exportResults;
 document.getElementById('btn-account').onclick = showAccount;
+document.getElementById('chk-retry-all').onchange = async (e) => {
+  await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ retryAllCountries: e.target.checked }),
+  });
+};
 document.getElementById('sort-select').onchange = e => { sortBy = e.target.value; updateTable(); };
 document.getElementById('run-select').onchange = e => showRunDetail(e.target.value);
 document.getElementById('run-history-close').onclick = () => {

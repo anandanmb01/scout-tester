@@ -5,7 +5,7 @@ import express from 'express';
 import { join } from 'path';
 import { loadEnv, PORT, SCOUT_USER_URL, ROOT_DIR } from './core/constants.js';
 import {
-  getResults, setResults, deleteResult, loadSites, saveSites, saveResults,
+  getResults, setResults, deleteResult, loadSites, saveSites, saveResults, saveResultsNow,
   initResults, getScoutKey, persistScoutKey, removeScoutKey,
 } from './core/results.js';
 import {
@@ -18,6 +18,7 @@ import {
 } from './core/countries.js';
 import {
   getState, isTesting, setBroadcast, autoRun, retryRun, testOneSite, stopRun,
+  getSettings, updateSettings,
 } from './core/runner.js';
 
 // ─── Bootstrap ───
@@ -140,6 +141,17 @@ app.post('/api/countries', (req, res) => {
   res.json({ ok: true, mode, active, count: active.length });
 });
 
+// ─── Routes: Settings ───
+
+app.get('/api/settings', (req, res) => {
+  res.json(getSettings());
+});
+
+app.post('/api/settings', (req, res) => {
+  const updated = updateSettings(req.body);
+  res.json({ ok: true, ...updated });
+});
+
 // ─── Routes: Account / API Key ───
 
 app.get('/api/account', async (req, res) => {
@@ -185,6 +197,19 @@ app.get('/api/runs', (req, res) => {
   });
 });
 
+app.get('/api/prev-passed', (req, res) => {
+  const index = loadRunsIndex();
+  const prevPassed = {};
+  for (const run of (index.runs || [])) {
+    const data = loadRunData(run.number);
+    if (!data?.siteResults) continue;
+    for (const [url, verdict] of Object.entries(data.siteResults)) {
+      if (verdict === 'PASS') prevPassed[url] = (prevPassed[url] || 0) + 1;
+    }
+  }
+  res.json(prevPassed);
+});
+
 app.get('/api/runs/:num', (req, res) => {
   const num = parseInt(req.params.num);
   if (isNaN(num)) return res.status(400).json({ error: 'Invalid run number' });
@@ -221,7 +246,7 @@ app.post('/api/runs/load/:num', (req, res) => {
     };
   }
   setResults(newResults);
-  saveResults();
+  saveResultsNow();
 
   broadcast('cleared', {});
   broadcast('state-update', { loadedRun: num, results: newResults });
@@ -281,14 +306,19 @@ app.post('/api/runs/save', (req, res) => {
 
 // ─── Routes: Actions ───
 
+app.post('/api/new-test', (req, res) => {
+  if (isTesting()) return res.json({ error: 'Already running' });
+  // Clear results instantly, start run immediately
+  setResults({});
+  saveResultsNow();
+  broadcast('cleared', {});
+  res.json({ ok: true });
+  autoRun('full');
+});
+
 app.post('/api/run', (req, res) => {
   if (isTesting()) return res.json({ error: 'Already running' });
-  const sites = loadSites();
-  const results = getResults();
-  const untested = sites.filter((s) => !results[s.url]).length;
-  const failed = sites.filter((s) => results[s.url]?.verdict === 'FAIL').length;
-  const nextNum = getNextRunNumber();
-  res.json({ ok: true, runId: nextNum, plan: { untested, failed } });
+  res.json({ ok: true });
   autoRun('full');
 });
 
@@ -337,13 +367,13 @@ app.post('/api/remove-site', (req, res) => {
   sites = sites.filter((s) => s.url !== url);
   saveSites(sites);
   deleteResult(url);
-  saveResults();
+  saveResultsNow();
   res.json({ ok: true });
 });
 
 app.post('/api/clear', (req, res) => {
   setResults({});
-  saveResults();
+  saveResultsNow();
   broadcast('cleared', {});
   res.json({ ok: true });
 });
@@ -366,6 +396,7 @@ const server = app.listen(PORT, () => {
 
 function shutdown(signal) {
   console.log(`\n  ${signal} received — shutting down...`);
+  saveResultsNow();
   clearInterval(heartbeatInterval);
   sseClients.forEach((c) => {
     try { c.end(); } catch (err) { console.warn(`SSE cleanup: ${err.message}`); }
