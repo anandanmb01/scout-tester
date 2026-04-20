@@ -1,11 +1,20 @@
-// ─── Scout Tester Constants ───
+/**
+ * Scout Tester — Configuration
+ *
+ * Loads environment variables from .env and exposes all runtime constants.
+ * This module is imported for side effects (env loading, directory creation)
+ * and for its named exports. It is the single source of truth for paths,
+ * Scout API endpoints, country lists, and batch defaults.
+ */
 
 import { readFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+// ─── Root ───
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
-export const ROOT_DIR = join(__dirname, '..');
+export const ROOT_DIR = join(__dirname, '..', '..');
 
 // ─── Environment Loader ───
 
@@ -26,6 +35,7 @@ export const PORT = parseInt(process.env.PORT || '3004', 10);
 
 export const SCOUT_API = 'https://api.scout.sentinel.co/api/v1/probe/sync';
 export const SCOUT_USER_URL = 'https://api.scout.sentinel.co/api/v1/user';
+export const SCOUT_TIMEOUT_MS = 45000;
 
 // ─── Countries ───
 
@@ -51,6 +61,7 @@ export const DATA_DIR = join(ROOT_DIR, 'data');
 export const PAUSED_RUN_FILE = join(DATA_DIR, 'paused-run.json');
 export const RESULTS_FILE = join(DATA_DIR, 'results.json');
 export const SITES_FILE = join(DATA_DIR, 'sites.json');
+export const SETTINGS_FILE = join(DATA_DIR, 'settings.json');
 export const RUNS_DIR = join(DATA_DIR, 'runs');
 export const RUNS_INDEX = join(RUNS_DIR, 'index.json');
 

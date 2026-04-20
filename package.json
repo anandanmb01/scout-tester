@@ -1,24 +1,35 @@
 {
   "name": "scout-tester",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "module",
   "description": "Automated block-check testing of Scout API against high-demand websites",
-  "main": "index.js",
+  "main": "src/index.js",
+  "sideEffects": [
+    "./src/config/index.js",
+    "./src/results/index.js",
+    "./server.js",
+    "./server/sse.js"
+  ],
   "exports": {
-    ".": "./index.js",
-    "./core/constants": "./core/constants.js",
-    "./core/probe": "./core/probe.js",
-    "./core/results": "./core/results.js",
-    "./core/runs": "./core/runs.js",
-    "./core/countries": "./core/countries.js",
-    "./core/runner": "./core/runner.js"
+    ".": "./src/index.js",
+    "./config": "./src/config/index.js",
+    "./errors": "./src/errors/index.js",
+    "./logger": "./src/logger/index.js",
+    "./countries": "./src/countries/index.js",
+    "./probe": "./src/probe/index.js",
+    "./results": "./src/results/index.js",
+    "./runs": "./src/runs/index.js",
+    "./runner": "./src/runner/index.js",
+    "./state": "./src/state/index.js",
+    "./server": "./server.js"
   },
   "files": [
-    "index.js",
+    "src/",
+    "server/",
     "server.js",
     "index.html",
-    "core/",
-    "docs/",
+    "web/",
+    "CHANGELOG.md",
     "SCOUT_API_README.md"
   ],
   "bin": {

@@ -14,5 +14,27 @@
 ## Quick Ref
 - **Port:** 3004, start with `start.bat`
 - **Stack:** Express, Scout API, SSE dashboard
-- **Key files:** `server.js`, `index.html`, `data/sites.json` (75 sites), `data/results.json`
 - **Scout API:** 30s gap, FR/DE/GB only, never parallel
+
+## Layout (v2.2.0 — Blue JS SDK pattern)
+```
+src/
+  config/    errors/    logger/    countries/    probe/
+  results/   runs/      state/     runner/{settings,pipeline,index}
+  index.js (barrel)
+server/
+  sse.js
+  routes/{results,countries,settings,account,runs,control,index}.js
+server.js          # thin boot
+index.html         # thin shell
+web/{styles.css,app.js}
+data/{sites.json (75 sites), results.json, runs/}
+test/smoke.js      # 24 assertions
+```
+
+- Every module has a barrel `index.js`.
+- Errors: `ScoutError` + subclasses with `ErrorCodes` string enum (`src/errors/`).
+- Logger: `[scout]` prefixed, level-gated via `SCOUT_LOG_LEVEL` (`src/logger/`).
+- Runner state extracted to `src/state/`; broadcast injected via `setBroadcast`.
+- Per-site `run-update` SSE emitted inside pipeline batch callbacks (row 2 lag fix).
+- `package.json` exposes `exports` map + `sideEffects` array for tree-shaking.

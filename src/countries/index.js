@@ -1,6 +1,11 @@
-// ─── Country Management ───
+/**
+ * Scout Tester — Country Mode
+ *
+ * In-memory selection of which country codes Scout probes target. Mode
+ * `default` uses FR/DE/GB; mode `all` expands to the full 61-country list.
+ */
 
-import { COUNTRIES_DEFAULT, COUNTRIES_ALL } from './constants.js';
+import { COUNTRIES_DEFAULT, COUNTRIES_ALL } from '../config/index.js';
 
 let activeCountries = [...COUNTRIES_DEFAULT];
 
@@ -11,11 +16,7 @@ export function getActiveCountries() {
 }
 
 export function setCountryMode(mode) {
-  if (mode === 'all') {
-    activeCountries = [...COUNTRIES_ALL];
-  } else {
-    activeCountries = [...COUNTRIES_DEFAULT];
-  }
+  activeCountries = mode === 'all' ? [...COUNTRIES_ALL] : [...COUNTRIES_DEFAULT];
   return activeCountries;
 }
 

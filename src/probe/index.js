@@ -1,6 +1,13 @@
-// ─── Probe & Detection ───
+/**
+ * Scout Tester — Scout API Probe
+ *
+ * Executes a single Scout block-check request against one (url, country)
+ * pair. Handles timeouts, content-type sniffing, and heuristic block-signal
+ * detection. Returns a normalised probe result object consumable by the
+ * results layer.
+ */
 
-import { SCOUT_API } from './constants.js';
+import { SCOUT_API, SCOUT_TIMEOUT_MS } from '../config/index.js';
 
 // ─── Fetch With Timeout ───
 
@@ -25,7 +32,6 @@ export function detectDataType(content) {
   const head = content.slice(0, 512).trim();
   const lower = head.toLowerCase();
 
-  // Binary signatures
   if (head.startsWith('\x89PNG')) return 'Image/PNG';
   if (head.startsWith('\xFF\xD8\xFF')) return 'Image/JPEG';
   if (head.startsWith('GIF8')) return 'Image/GIF';
@@ -33,7 +39,6 @@ export function detectDataType(content) {
   if (head.startsWith('RIFF') && head.includes('WEBP')) return 'Image/WebP';
   if (head.startsWith('PK')) return 'Archive/ZIP';
 
-  // Structured text
   if (lower.startsWith('<!doctype html') || lower.startsWith('<html')) return 'HTML';
   if (lower.startsWith('<?xml') || lower.startsWith('<rss') || lower.startsWith('<feed')) return 'XML';
   if (head.startsWith('{') || head.startsWith('[')) {
@@ -43,7 +48,6 @@ export function detectDataType(content) {
   if (lower.includes('<head') || lower.includes('<body') || lower.includes('<div')) return 'HTML';
   if (lower.startsWith('<!doctype')) return 'HTML';
 
-  // Plain text fallback
   return 'Text';
 }
 
@@ -81,7 +85,7 @@ export async function rawProbe(url, country, scoutKey, opts = {}) {
         antiBotScrape: opts.antiBotScrape !== false,
         outputFileExtension: 'EXTENSION_HTML',
       }),
-    }, 45000);
+    }, SCOUT_TIMEOUT_MS);
     const elapsed = Date.now() - start;
     const content = data.file_content || '';
     const passed = data.state === 'complete' && content.length > 100;

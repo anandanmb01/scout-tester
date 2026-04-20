@@ -1,8 +1,16 @@
-// ─── Run Persistence (Directory-Based) ───
+/**
+ * Scout Tester — Run Persistence
+ *
+ * Directory-based storage for completed test runs. Each run lives at
+ * `data/runs/test-NNN/results.json`; `data/runs/index.json` holds the
+ * lightweight list of run metadata. Also handles the legacy flat-file
+ * format migration and paused-run snapshots.
+ */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { RUNS_DIR, RUNS_INDEX, DATA_DIR, PAUSED_RUN_FILE } from './constants.js';
+import { RUNS_DIR, RUNS_INDEX, DATA_DIR, PAUSED_RUN_FILE } from '../config/index.js';
+import { logger } from '../logger/index.js';
 
 // ─── Runs Index ───
 
@@ -11,7 +19,7 @@ export function loadRunsIndex() {
   try {
     return JSON.parse(readFileSync(RUNS_INDEX, 'utf8'));
   } catch (err) {
-    console.warn(`Failed to parse runs index: ${err.message}`);
+    logger.warn(`Failed to parse runs index: ${err.message}`);
     return { runs: [], activeRun: null };
   }
 }
@@ -46,7 +54,7 @@ export function loadRunData(num) {
   try {
     return JSON.parse(readFileSync(file, 'utf8'));
   } catch (err) {
-    console.warn(`Failed to load run ${num}: ${err.message}`);
+    logger.warn(`Failed to load run ${num}: ${err.message}`);
     return null;
   }
 }
@@ -94,9 +102,9 @@ export function migrateOldRuns() {
       saveRunData(num, { meta, siteResults: run.siteResults || {} });
     }
     saveRunsIndex(index);
-    console.log(`  Migrated ${oldRuns.length} old runs to directory format`);
+    logger.info(`Migrated ${oldRuns.length} old runs to directory format`);
   } catch (err) {
-    console.warn(`Failed to migrate old runs: ${err.message}`);
+    logger.warn(`Failed to migrate old runs: ${err.message}`);
   }
 }
 

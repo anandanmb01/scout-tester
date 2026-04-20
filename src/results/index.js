@@ -1,8 +1,16 @@
-// ─── Results & Data Persistence ───
+/**
+ * Scout Tester — Results & Scout Key Persistence
+ *
+ * Owns the in-memory `results` map (keyed by URL) and the Scout API key.
+ * Handles disk I/O (debounced save to results.json, synchronous save on
+ * shutdown) and verdict derivation from probe history. `saveTestResult`
+ * is the single mutation entry point used by the runner.
+ */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { RESULTS_FILE, SITES_FILE, REAL_BLOCK_MS, ROOT_DIR } from './constants.js';
 import { join } from 'path';
+import { RESULTS_FILE, SITES_FILE, REAL_BLOCK_MS, ROOT_DIR } from '../config/index.js';
+import { logger } from '../logger/index.js';
 
 // ─── Scout Key State ───
 
@@ -67,14 +75,13 @@ export function loadResults() {
   try {
     return JSON.parse(readFileSync(RESULTS_FILE, 'utf8'));
   } catch (err) {
-    console.warn(`Failed to parse results: ${err.message}`);
+    logger.warn(`Failed to parse results: ${err.message}`);
     return {};
   }
 }
 
 let saveTimer = null;
 export function saveResults() {
-  // Debounce — write at most every 2 seconds to avoid blocking event loop
   if (saveTimer) return;
   saveTimer = setTimeout(() => {
     saveTimer = null;
@@ -82,7 +89,6 @@ export function saveResults() {
   }, 2000);
 }
 
-// Force save (for shutdown/finalize)
 export function saveResultsNow() {
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   try { writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2)); } catch {}
@@ -145,7 +151,6 @@ export function saveTestResult(url, category, probeResults, { recordSiteResult, 
     if (!nodeResults[nr.country] || nr.passed) nodeResults[nr.country] = nr;
   }
 
-  // Pick best data type from successful probes, fallback to any
   const passedProbe = probeResults.find((nr) => nr.passed);
   const dataType = passedProbe?.dataType || probeResults[0]?.dataType || 'Unknown';
 
