@@ -50,6 +50,7 @@ export const SCOUT_COUNTRIES_API = 'https://api.scout.sentinel.co/api/v1/generic
  * COUNTRIES_DEFAULT is randomly selected 3 countries from COUNTRIES_ALL.
  */
 export async function initCountries() {
+  console.log('[scout] Fetching countries from Scout API...');
   const response = await fetch(SCOUT_COUNTRIES_API, { timeout: 10000 });
   if (!response.ok) throw new Error(`Scout API returned HTTP ${response.status}`);
 
@@ -63,6 +64,7 @@ export async function initCountries() {
   // Randomly pick 3 from COUNTRIES_ALL for COUNTRIES_DEFAULT
   const shuffled = [...codes].sort(() => Math.random() - 0.5);
   COUNTRIES_DEFAULT = shuffled.slice(0, Math.min(3, shuffled.length));
+  console.log(`[scout] Loaded ${COUNTRIES_ALL.length} countries, default: [${COUNTRIES_DEFAULT.join(', ')}]`);
 }
 
 // ─── Batch Settings ───

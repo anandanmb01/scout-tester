@@ -316,6 +316,7 @@ export async function autoRun(type = 'full') {
   const SCOUT_KEY = getScoutKey();
   const { fireAllMode, batchSize, autoRetestEnabled, autoRetestMax, expandCountriesAfter } = getSettings();
 
+  logger.info(`Starting ${type} test run with ${sites.length} sites`);
   const run = startRun(type);
   run.elapsedBeforePause = 0;
   run.resumedAt = run.startedAt;
